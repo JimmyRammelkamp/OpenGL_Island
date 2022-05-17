@@ -18,10 +18,13 @@ in vec3 aVertex;
 in vec3 aNormal;
 in vec2 aTexCoord;
 
+
+
 out vec4 color;
 out vec4 position;
 out vec3 normal;
 out vec2 texCoord0;
+
 
 
 
@@ -73,6 +76,7 @@ void main(void)
 
 	// calculate texture coordinate
 	texCoord0 = aTexCoord;
+
 
 	// calculate depth of water
 	waterDepth = waterLevel - aVertex.y;

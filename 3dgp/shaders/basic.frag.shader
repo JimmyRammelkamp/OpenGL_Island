@@ -28,6 +28,8 @@ in mat3 matrixTangent; //Normal Mapping
 // Output Variable (sent down through the Pipeline)
 out vec4 outColor;
 
+uniform int Text = 0;
+
 
 struct DIRECTIONAL
 {
@@ -162,7 +164,10 @@ void main(void)
 	outColor += DirectionalLight(lightDir);
 	outColor += RimLight(rimlight);
 	outColor += PointLight(lightPoint1);
-	outColor += SpotLight(spotLight1);
+	//outColor += SpotLight(spotLight1);
 	outColor *= texture(texture0, texCoord0.st);
 	//outColor = mix(vec4(fogColour, 1), outColor, fogFactor);
+
+	// Debug Text - Do Not Change!
+	if (Text == 1) outColor = vec4(1, 0.8, 0, 1);
 }

@@ -19,7 +19,15 @@ C3dglSkyBox skybox;
 
 C3dglTerrain terrain, water;
 C3dglModel streetLamp;
+C3dglModel palm;
 C3dglModel character;
+C3dglModel cartoonDiver;
+C3dglModel cartoonDiver2;
+C3dglModel coral;
+C3dglModel coral2;
+C3dglModel seaweed;
+C3dglModel seaweed2;
+
 
 
 
@@ -35,6 +43,16 @@ GLuint idTexNone;
 GLuint idTexScreen;
 GLuint idTexWood;
 GLuint idTexNormal;
+GLuint idTexCartoonDiverBase;
+GLuint idTexCartoonDiverNormal;
+GLuint idTexCoralBase;
+GLuint idTexCoralNormal;
+GLuint idTexSeaWeedBase;
+GLuint idTexSeaWeedNormal;
+GLuint idTexPalmBase;
+GLuint idTexPalmNormal;
+
+
 
 GLuint WImage = 800, HImage = 600;
 GLuint idFBO;
@@ -54,6 +72,15 @@ vec3 cam(0);				// Camera movement values
 
 //float PrevT;
 //vec3 characterpos;
+
+vec3 target1 = vec3(12.0f, 3.0f, 26.0f);
+vec3 target2 = vec3(-17.80f, 3.0f, 27.0f);
+vec3 target = target1;
+//vec3 characterpos = vec3(1.0f, 5.0f, 20.0f);
+
+bool blurPostProc = true;
+int fxaa = 1;
+int fxaadebug = 1;
 
 bool init()
 {
@@ -149,7 +176,6 @@ bool init()
 		0.0f, 1.0f, 0.0f,	0.0f, 1.0f
 	};
 
-
 	// Generate the buffer name
 	glGenBuffers(1, &bufQuad);
 	// Bind the vertex buffer and send data
@@ -157,13 +183,23 @@ bool init()
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
 	// load your 3D models here!
-	if (!terrain.loadHeightmap("models\\heightmap.png", 10)) return false;
+	if (!terrain.loadHeightmap("models\\heightmap big.png", 10)) return false;
 	if (!water.loadHeightmap("models\\watermap.png", 10)) return false;
 	
-	if (!streetLamp.load("models\\street lamp - fancy.obj")) return false;
-	if (!character.load("models\\Happy Idle.dae")) return false;
-	if (!character.loadAnimations()) return false;
-	
+	//if (!streetLamp.load("models\\street lamp - fancy.obj")) return false;
+	if (!palm.load("models\\Palm1.fbx")) return false;
+	if (!coral.load("models\\Coral_1.fbx")) return false;
+	if (!seaweed.load("models\\seaweed.dae")) return false;
+
+	//if (!character.load("models\\Happy Idle.dae")) return false;
+	//if (!character.loadAnimations()) return false;
+
+	if (!cartoonDiver.load("models\\Cartoon Diver\\Swimming.dae")) return false;
+	if (!cartoonDiver.loadAnimations()) return false;
+
+	if (!cartoonDiver2.load("models\\Cartoon Diver\\Treading Water.dae")) return false;
+	if (!cartoonDiver2.loadAnimations()) return false;
+
 	if (!skybox.load("models\\TropicalSunnyDay\\TropicalSunnyDayFront1024.jpg",
 		"models\\TropicalSunnyDay\\TropicalSunnyDayLeft1024.jpg",
 		"models\\TropicalSunnyDay\\TropicalSunnyDayBack1024.jpg",
@@ -206,6 +242,13 @@ bool init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
 
+	bm.Load("models/Ground54Color.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexGrass);
+	glBindTexture(GL_TEXTURE_2D, idTexGrass);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
 	bm.Load("models/textures/Ch19_1001_Normal.png", GL_RGBA);
 	if (!bm.GetBits()) return false;
 	glGenTextures(1, &idTexNormal);
@@ -213,13 +256,62 @@ bool init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
 	
-	bm.Load("models/grass.png", GL_RGBA);
+	bm.Load("models/Cartoon Diver/CartoonDiverBase.png", GL_RGBA);
 	if (!bm.GetBits()) return false;
-	glGenTextures(1, &idTexGrass);
-	glBindTexture(GL_TEXTURE_2D, idTexGrass);
+	glGenTextures(1, &idTexCartoonDiverBase);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverBase);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
 
+
+	bm.Load("models/Cartoon Diver/CartoonDiverNormal.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexCartoonDiverNormal);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverNormal);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/coralpurple_BaseColor.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexCoralBase);
+	glBindTexture(GL_TEXTURE_2D, idTexCoralBase);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/Coral_1_Normal.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexCoralNormal);
+	glBindTexture(GL_TEXTURE_2D, idTexCoralNormal);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/SeaweedBase.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexSeaWeedBase);
+	glBindTexture(GL_TEXTURE_2D, idTexSeaWeedBase);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/flatNormal.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexSeaWeedNormal);
+	glBindTexture(GL_TEXTURE_2D, idTexSeaWeedNormal);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/PalmColor.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexPalmBase);
+	glBindTexture(GL_TEXTURE_2D, idTexPalmBase);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
+
+	bm.Load("models/PalmNoral.png", GL_RGBA);
+	if (!bm.GetBits()) return false;
+	glGenTextures(1, &idTexPalmNormal);
+	glBindTexture(GL_TEXTURE_2D, idTexPalmNormal);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, bm.GetWidth(), bm.GetHeight(), 0, GL_RGBA, GL_UNSIGNED_BYTE, bm.GetBits());
 
 	ProgramBasic.SendUniform("texture0", 0);
 	//ProgramEffect.SendUniform("texture0", 0);
@@ -254,6 +346,7 @@ bool init()
 	ProgramWater.SendUniform("skyColor", 0.2f, 0.6f, 1.f);
 	ProgramTerrain.SendUniform("waterColor", 0.2f, 0.22f, 0.02f);
 	ProgramTerrain.SendUniform("waterLevel", waterLevel);
+	ProgramEffect.SendUniform("waterLevel", waterLevel);
 	//ProgramBasic.SendUniform("waterLevel", waterLevel);
 
 	// setup fog
@@ -301,6 +394,18 @@ bool init()
 	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 
 	return true;
+}
+
+// Helper function used to display player coordinates (X-Z) on-screen
+void displayCoords(float x, float y, float z)
+{
+	char buf[100];
+	snprintf(buf, sizeof(buf), "(%1.1f, %1.1f, %1.1f)", x, y, z);
+	ProgramBasic.SendUniform("Text", 1);
+	glWindowPos2i(10, 10);  // move in 10 pixels from the left and bottom edges
+	for (char* p = buf; *p; p++)
+		glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
+	ProgramBasic.SendUniform("Text", 0);
 }
 
 void done()
@@ -352,48 +457,115 @@ void renderScene(mat4& matrixView, float time)
 	
 	
 	// revert normal light after skybox
-	ProgramBasic.SendUniform("lightAmbient.color", 0.1, 0.1, 0.1);
+	ProgramBasic.SendUniform("lightAmbient.color", 0.2, 0.2, 0.2);
 	ProgramBasic.SendUniform("materialDiffuse", 1.0, 1.0, 1.0);
 
 	ProgramBasic.SendUniform("rimlight.direction", 1.0, 0.5, 1.0);
 	ProgramBasic.SendUniform("rimlight.diffuse", 0.5, 0.5, 0.5);
 	
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexPalmBase);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, idTexPalmNormal);
+
+
 	m = matrixView;
 	m = translate(m, vec3(0.0f, 3.0f, 0.0f));
 	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(0.08f, 0.08f, 0.08f));
-	streetLamp.render(m);
-	glBindTexture(GL_TEXTURE_2D, idTexWood);
+	m = scale(m, vec3(0.1f, 0.1f, 0.1f));
+	palm.render(m);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexCoralBase);
 	glActiveTexture(GL_TEXTURE1);
-	glBindTexture(GL_TEXTURE_2D, idTexNormal);
+	glBindTexture(GL_TEXTURE_2D, idTexCoralNormal);
+
+	m = matrixView;
+	m = translate(m, vec3(8.0f, 3.0f, 17.0f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.2f, 0.2f, 0.2f));
+	coral.render(m);
+
+	m = matrixView;
+	m = translate(m, vec3(9.5f, 3.0f, 19.3f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(0.2f, 0.2f, 0.2f));
+	coral.render(m);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexSeaWeedBase);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, idTexSeaWeedNormal);
+
+	m = matrixView;
+	m = translate(m, vec3(9.1f, 3.0f, 21.3f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(10.0f, 10.0f, 10.0f));
+	seaweed.render(m);
+
+	m = matrixView;
+	m = translate(m, vec3(8.7f, 3.0f, 18.3f));
+	m = rotate(m, radians(120.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(10.0f, 10.0f, 10.0f));
+	seaweed.render(m);
+
+
+	
+
+	//Diver1
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverBase);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverNormal);
 	// calculate and send bone transforms
 	std::vector<float> transforms;
-	character.getAnimData(0, time, transforms);
+	cartoonDiver.getAnimData(0, time, transforms);
 	ProgramBasic.SendUniformMatrixv("bones", (float*)&transforms[0], transforms.size() / 16);
 	//cout << time;
-	
+
 	static float PrevT = 0.0f;
 	//float delta = time - PrevT;
 
 	//cout << time - PrevT << " ";
-	static vec3 characterpos = vec3(1.0f, 5.0f, 20.0f);
-	vec3 target = vec3(20.0f, 5.0f, 40.0f);
+	static vec3 characterpos = vec3(-17.80f, 3.0f, 27.0f);
+	
 	vec3 direction = normalize(target - characterpos);
 	vec3 transformation = (direction * (time - PrevT)) * 2.0f;
-	
+
 
 	if (length(characterpos - target) < 0.1f)
-		characterpos = characterpos;
+	{
+		//characterpos = characterpos;
+		if (target == target1)target = target2;
+		else if (target == target2)target = target1;
+	}
 	else characterpos = characterpos + transformation;
 	//cout << (length(characterpos - target)) << " ";
 	PrevT = time;
 	//cout << normalize(target - characterpos).x << " ";
 	m = matrixView;
 	m = translate(m, characterpos);
-	m = rotate(m, atan2(direction.x,direction.z), vec3(0.0f, 1.0f, 0.0f));
-	m = scale(m, vec3(1.0f, 1.0f, 1.0f));
-	character.render(m);
+	m = rotate(m, atan2(direction.x, direction.z), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(5.0f, 5.0f, 5.0f));
+	cartoonDiver.render(m);
 	
+	//Diver2
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverBase);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, idTexCartoonDiverNormal);
+	// calculate and send bone transforms
+	//std::vector<float> transforms;
+	cartoonDiver2.getAnimData(0, time, transforms);
+	ProgramBasic.SendUniformMatrixv("bones", (float*)&transforms[0], transforms.size() / 16);
+	
+
+	m = matrixView;
+	m = translate(m, vec3(1.0f, 3.0f + cos(time)*0.2, 20.0f));
+	m = rotate(m, radians(180.f), vec3(0.0f, 1.0f, 0.0f));
+	m = scale(m, vec3(5.0f, 5.0f, 5.0f));
+	cartoonDiver2.render(m);
+
 	 
 	ProgramBasic.SendUniform("rimlight.direction", 0.0, 0.0, 0.0);
 	ProgramBasic.SendUniform("rimlight.diffuse", 0.0, 0.0, 0.0);
@@ -424,6 +596,13 @@ void renderScene(mat4& matrixView, float time)
 	ProgramWater.SendUniform("matrixModelView", m);
 	water.render(m);
 
+
+	mat4 inv = inverse(matrixView);
+	vec3 pos = vec3(inv[3].x, inv[3].y, inv[3].z);
+	displayCoords(inv[3].x, inv[3].y, inv[3].z);
+	//displayCoords(target.x, length(characterpos - target), target.z);
+	if (inv[3].y > waterLevel) ProgramEffect.SendUniform("isAboveWater", true);
+	else  ProgramEffect.SendUniform("isAboveWater", false);
 }
 
 //void onReshape(int w, int h);
@@ -435,6 +614,11 @@ void onRender()
 
 	// this global variable controls the animation
 	float time = glutGet(GLUT_ELAPSED_TIME) * 0.001f;
+
+	ProgramEffect.SendUniform("blurPostProc", blurPostProc);
+	ProgramEffect.SendUniform("u_fxaaOn", fxaa);
+	ProgramEffect.SendUniform("u_showEdges", fxaadebug);
+	ProgramEffect.SendUniform("GlobalTime", time);
 
 	
 	// Pass 1: off-screen rendering
@@ -470,7 +654,7 @@ void onRender()
 	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
 	
 	
-
+	
 	// setup ortographic projection
 	ProgramEffect.SendUniform("matrixProjection", ortho(0, 1, 0, 1, -1, 1));
 	// clear screen and buffers
@@ -523,6 +707,10 @@ void onKeyDown(unsigned char key, int x, int y)
 	case 'd': cam.x = std::min(cam.x * 1.05f, -0.01f); break;
 	case 'e': cam.y = std::max(cam.y * 1.05f, 0.01f); break;
 	case 'q': cam.y = std::min(cam.y * 1.05f, -0.01f); break;
+	case '1': if (blurPostProc == false) blurPostProc = true; else blurPostProc = false; break;
+	case '2': if (fxaa < 1) fxaa = 1; else fxaa = 0; break;
+	case '3': if (fxaadebug < 1) fxaadebug = 1; else fxaadebug = 0; break;
+
 	}
 	// speed limit
 	cam.x = std::max(-0.15f, std::min(0.15f, cam.x));

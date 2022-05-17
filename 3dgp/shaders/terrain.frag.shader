@@ -8,6 +8,7 @@ uniform vec3 fogColour;
 uniform sampler2D textureBed;
 uniform sampler2D textureShore;
 
+
 in float fogFactor;
 
 // Input: Water Related
